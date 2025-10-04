@@ -37,7 +37,8 @@ Add to your MCP client configuration:
 {
   "mcpServers": {
     "dependency-explorer": {
-      "command": "mcp-dependency-explorer"
+      "type": "local",
+      "command": ["npx", "-y", "@kozer/mcp-dependency-explorer"]
     }
   }
 }
@@ -49,8 +50,8 @@ Or if installed from source:
 {
   "mcpServers": {
     "dependency-explorer": {
-      "command": "node",
-      "args": ["/path/to/mcp-dependency-explorer/dist/server.js"]
+      "type": "local",
+      "command": ["node", "/path/to/mcp-dependency-explorer/dist/server.js"]
     }
   }
 }
@@ -63,16 +64,18 @@ Or if installed from source:
 List all installed Node modules from all `node_modules` directories.
 
 **Parameters:**
+
 - `root` (optional): Project root directory (defaults to cwd)
 - `filter` (optional): Filter by module name substring
 
 **Example:**
+
 ```typescript
 // List all modules
-list_modules()
+list_modules();
 
 // Filter by name
-list_modules({ filter: "react" })
+list_modules({ filter: "react" });
 ```
 
 #### 2. `search`
@@ -80,6 +83,7 @@ list_modules({ filter: "react" })
 Search for patterns in module files with code snippets.
 
 **Parameters:**
+
 - `module`: Module name (exact or substring match)
 - `pattern`: Regex pattern to search
 - `flags` (optional): Regex flags (e.g., 'i' for case-insensitive)
@@ -88,14 +92,15 @@ Search for patterns in module files with code snippets.
 - `root` (optional): Project root directory
 
 **Example:**
+
 ```typescript
 // Search for useState in React
 search({
   module: "react",
   pattern: "function useState",
   flags: "i",
-  context: 10
-})
+  context: 10,
+});
 ```
 
 #### 3. `read_file`
@@ -103,6 +108,7 @@ search({
 Read a file from a module with optional line range.
 
 **Parameters:**
+
 - `module`: Module name
 - `file`: File path relative to module root
 - `startLine` (optional): Start line (1-based)
@@ -110,13 +116,14 @@ Read a file from a module with optional line range.
 - `root` (optional): Project root directory
 
 **Example:**
+
 ```typescript
 read_file({
   module: "fastify",
   file: "fastify.d.ts",
   startLine: 100,
-  count: 50
-})
+  count: 50,
+});
 ```
 
 #### 4. `list_symbols`
@@ -124,6 +131,7 @@ read_file({
 List TypeScript symbols (functions, classes, interfaces, etc.) from a module.
 
 **Parameters:**
+
 - `module`: Module name
 - `kind` (optional): Filter by symbol type (`function`, `class`, `interface`, `type`, `enum`, `namespace`, `variable`)
 - `name` (optional): Filter by symbol name (substring)
@@ -131,15 +139,16 @@ List TypeScript symbols (functions, classes, interfaces, etc.) from a module.
 - `root` (optional): Project root directory
 
 **Example:**
+
 ```typescript
 // List all symbols
-list_symbols({ module: "fastify" })
+list_symbols({ module: "fastify" });
 
 // List only interfaces
-list_symbols({ module: "fastify", kind: "interface" })
+list_symbols({ module: "fastify", kind: "interface" });
 
 // Search for specific symbol name
-list_symbols({ module: "fastify", name: "Request" })
+list_symbols({ module: "fastify", name: "Request" });
 ```
 
 #### 5. `get_symbol`
@@ -147,6 +156,7 @@ list_symbols({ module: "fastify", name: "Request" })
 Get the full code for a specific symbol with context.
 
 **Parameters:**
+
 - `module`: Module name
 - `file`: File path relative to module root
 - `name`: Symbol name
@@ -154,13 +164,14 @@ Get the full code for a specific symbol with context.
 - `root` (optional): Project root directory
 
 **Example:**
+
 ```typescript
 get_symbol({
   module: "fastify",
   file: "types/instance.d.ts",
   name: "FastifyInstance",
-  padding: 15
-})
+  padding: 15,
+});
 ```
 
 ## How It Works
