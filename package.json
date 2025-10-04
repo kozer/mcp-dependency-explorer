@@ -1,0 +1,50 @@
+{
+  "name": "@kozer/mcp-node-modules-docs",
+  "version": "0.1.0",
+  "description": "MCP server for intelligent access to node_modules documentation and source code",
+  "type": "module",
+  "author": "Antony Agrios <antonyagrios@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kozer/mcp-node-modules-docs.git"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "node-modules",
+    "documentation",
+    "typescript",
+    "npm",
+    "package-manager"
+  ],
+  "bin": {
+    "mcp-node-modules-docs": "dist/server.js"
+  },
+  "main": "dist/server.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "prepublishOnly": "pnpm build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "fast-glob": "^3.3.3",
+    "js-yaml": "^4.0.9",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.6.2",
+    "typescript": "^5.6.3"
+  },
+  "packageManager": "pnpm@10.7.0+sha512.6b865ad4b62a1d9842b61d674a393903b871d9244954f652b8842c2b553c72176b278f64c463e52d40fff8aba385c235c8c9ecf5cc7de4fd78b8bb6d49633ab6"
+}
