@@ -1,25 +1,27 @@
 {
-  "name": "@kozer/mcp-node-modules-docs",
+  "name": "@kozer/mcp-dependency-explorer",
   "version": "0.1.0",
-  "description": "MCP server for intelligent access to node_modules documentation and source code",
+  "description": "MCP server for exploring and inspecting project dependencies - documentation and source code access",
   "type": "module",
   "author": "Antony Agrios <antonyagrios@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kozer/mcp-node-modules-docs.git"
+    "url": "https://github.com/kozer/mcp-dependency-explorer.git"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
+    "dependencies",
     "node-modules",
     "documentation",
     "typescript",
     "npm",
-    "package-manager"
+    "package-manager",
+    "explorer"
   ],
   "bin": {
-    "mcp-node-modules-docs": "dist/server.js"
+    "mcp-dependency-explorer": "dist/server.js"
   },
   "main": "dist/server.js",
   "files": [

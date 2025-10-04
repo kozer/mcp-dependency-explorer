@@ -1,4 +1,4 @@
-# mcp-project-deps
+# mcp-dependency-explorer
 
 MCP (Model Context Protocol) server that provides intelligent access to your project's installed dependencies - explore documentation and source code directly from `node_modules`.
 
@@ -15,14 +15,14 @@ MCP (Model Context Protocol) server that provides intelligent access to your pro
 ### Via npm (Recommended)
 
 ```bash
-npm install -g @kozer/mcp-node-modules-docs
+npm install -g @kozer/mcp-dependency-explorer
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/kozer/mcp-node-modules-docs.git
-cd mcp-node-modules-docs
+git clone https://github.com/kozer/mcp-dependency-explorer.git
+cd mcp-dependency-explorer
 pnpm install
 pnpm build
 ```
@@ -36,8 +36,8 @@ Add to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "node-modules-docs": {
-      "command": "mcp-node-modules-docs"
+    "dependency-explorer": {
+      "command": "mcp-dependency-explorer"
     }
   }
 }
@@ -48,9 +48,9 @@ Or if installed from source:
 ```json
 {
   "mcpServers": {
-    "node-modules-docs": {
+    "dependency-explorer": {
       "command": "node",
-      "args": ["/path/to/mcp-node-modules-docs/dist/server.js"]
+      "args": ["/path/to/mcp-dependency-explorer/dist/server.js"]
     }
   }
 }
