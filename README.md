@@ -4,6 +4,7 @@ MCP (Model Context Protocol) server that provides intelligent access to your pro
 
 ## Features
 
+- **Documentation Cache**: One-time initialization to cache all module documentation (README, docs/) for faster access
 - **List Modules**: Discover all installed npm packages across your project, including monorepo workspaces
 - **Search**: Regex-powered search through module source files (.ts, .tsx, .jsx, .d.ts, .css, .md, etc.)
 - **Read Files**: Read module files with optional line range support
@@ -174,12 +175,36 @@ get_symbol({
 });
 ```
 
+#### 6. `list_cached_docs`
+
+List all cached documentation files for a module.
+
+**Parameters:**
+
+- `module`: Module name
+- `root` (optional): Project root directory
+
+**Response includes:**
+- `cacheDir`: Full path to cache directory
+- `moduleHash`: Base64-encoded hash used as folder name
+- `totalDocs`: Number of cached documentation files
+- `docs`: Array of cached file paths
+
+**Example:**
+
+```typescript
+list_cached_docs({
+  module: "react",
+});
+```
+
 ## How It Works
 
 1. **Project Detection**: Automatically finds your project root by looking for `package.json` and `node_modules`
-2. **Workspace Scanning**: Detects monorepos (pnpm-workspace.yaml, yarn workspaces) and scans all workspace packages
-3. **TypeScript Analysis**: Uses TypeScript compiler API to extract symbols with accurate type information
-4. **Intelligent Caching**: Caches symbol indexes for fast repeated queries
+2. **Documentation Caching**: On server initialization, caches all module documentation (README, CHANGELOG, LICENSE, docs/) to `/tmp/mcp-node-modules-docs/` for faster access
+3. **Workspace Scanning**: Detects monorepos (pnpm-workspace.yaml, yarn workspaces) and scans all workspace packages
+4. **TypeScript Analysis**: Uses TypeScript compiler API to extract symbols with accurate type information
+5. **Intelligent Caching**: Caches symbol indexes for fast repeated queries
 
 ## Supported File Types
 

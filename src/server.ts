@@ -6,7 +6,7 @@ import fg from "fast-glob";
 import fs from "fs";
 import path from "path";
 import ts from "typescript";
-import { fileURLToPath } from "url";
+import os from "os";
 
 function findProjectRoot(start: string): string {
   let cur = start;
@@ -144,6 +144,107 @@ type Symbol = {
 };
 
 const symbolCache = new Map<string, Symbol[]>();
+
+const DOCS_CACHE_DIR = path.join(os.tmpdir(), "mcp-node-modules-docs");
+const docsCache = new Map<string, string[]>();
+
+function ensureDocsCacheDir(): void {
+  if (!fs.existsSync(DOCS_CACHE_DIR)) {
+    fs.mkdirSync(DOCS_CACHE_DIR, { recursive: true });
+  }
+}
+
+function getModuleHash(mod: Module): string {
+  return Buffer.from(`${mod.name}@${mod.version}`).toString("base64").replace(/[/+=]/g, "_");
+}
+
+function getModuleDocsDir(mod: Module): string {
+  return path.join(DOCS_CACHE_DIR, getModuleHash(mod));
+}
+
+function copyModuleDocs(mod: Module): string[] {
+  const moduleHash = getModuleHash(mod);
+  
+  if (docsCache.has(moduleHash)) {
+    return docsCache.get(moduleHash)!;
+  }
+
+  const docFiles: string[] = [];
+  const seenFiles = new Set<string>();
+  
+  const docPatterns = [
+    "**/*.md"
+  ];
+
+  try {
+    const files = fg.sync(docPatterns, {
+      cwd: mod.dir,
+      onlyFiles: true,
+      ignore: ["**/node_modules/**", "**/test/**", "**/tests/**"],
+      dot: false
+    });
+
+    for (const file of files) {
+      const normalizedFile = file.toLowerCase();
+      
+      if (seenFiles.has(normalizedFile)) {
+        continue;
+      }
+      seenFiles.add(normalizedFile);
+
+      const pathParts = file.split(path.sep);
+      if (pathParts.length === 1) {
+        continue;
+      }
+
+      docFiles.push(file);
+    }
+
+    if (docFiles.length > 0) {
+      const moduleDocsDir = getModuleDocsDir(mod);
+      
+      if (!fs.existsSync(moduleDocsDir)) {
+        fs.mkdirSync(moduleDocsDir, { recursive: true });
+      }
+
+      for (const file of docFiles) {
+        const srcPath = path.join(mod.dir, file);
+        const destPath = path.join(moduleDocsDir, file);
+        
+        const destDir = path.dirname(destPath);
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true });
+        }
+
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to copy docs for ${mod.name}:`, error);
+  }
+
+  docsCache.set(moduleHash, docFiles);
+  return docFiles;
+}
+
+function initializeDocsCache(root: string): { total: number; cached: number } {
+  ensureDocsCacheDir();
+  const modules = scanAllModules(root);
+  let cached = 0;
+
+  for (const mod of modules) {
+    try {
+      const docs = copyModuleDocs(mod);
+      if (docs.length > 0) {
+        cached++;
+      }
+    } catch (error) {
+      console.error(`Failed to cache docs for ${mod.name}:`, error);
+    }
+  }
+
+  return { total: modules.length, cached };
+}
 
 function tsKindToSymKind(node: ts.Node): SymKind | null {
   if (ts.isFunctionDeclaration(node)) return "function";
@@ -327,7 +428,10 @@ server.registerTool(
       };
     }
 
-    const files = fg.sync([
+    const moduleDocsDir = getModuleDocsDir(mod);
+    const cachedDocs = docsCache.get(getModuleHash(mod)) || [];
+
+    const codeFiles = fg.sync([
       "**/*.d.ts",
       "**/*.ts",
       "**/*.tsx",
@@ -336,8 +440,6 @@ server.registerTool(
       "**/*.scss",
       "**/*.sass",
       "**/*.less",
-      "**/*.md",
-      "README.md"
     ], {
       cwd: mod.dir,
       onlyFiles: true,
@@ -357,7 +459,49 @@ server.registerTool(
       snippet: string;
     }> = [];
 
-    for (const file of files) {
+    for (const file of cachedDocs) {
+      const abs = path.join(moduleDocsDir, file);
+      if (!exists(abs)) continue;
+      
+      const content = fs.readFileSync(abs, "utf8");
+      const lines = content.split(/\r?\n/);
+
+      for (let i = 0; i < lines.length; i++) {
+        const match = lines[i].match(regex);
+        if (match) {
+          const start = Math.max(0, i - context);
+          const end = Math.min(lines.length, i + 1 + context);
+
+          results.push({
+            file: file.replace(/\\/g, "/"),
+            line: i + 1,
+            match: match[0],
+            snippet: lines.slice(start, end).join("\n"),
+          });
+
+          if (results.length >= limit) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      module: mod.name,
+                      total: results.length,
+                      results,
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+        }
+      }
+    }
+
+    for (const file of codeFiles) {
       const abs = path.join(mod.dir, file);
       const content = fs.readFileSync(abs, "utf8");
       const lines = content.split(/\r?\n/);
@@ -455,7 +599,21 @@ server.registerTool(
       };
     }
 
-    const abs = path.join(mod.dir, file);
+    const cachedDocs = docsCache.get(getModuleHash(mod)) || [];
+    const isMarkdown = file.toLowerCase().endsWith('.md');
+    const isCached = cachedDocs.includes(file);
+    
+    let abs: string;
+    
+    if (isMarkdown && isCached) {
+      abs = path.join(getModuleDocsDir(mod), file);
+      if (!exists(abs)) {
+        abs = path.join(mod.dir, file);
+      }
+    } else {
+      abs = path.join(mod.dir, file);
+    }
+
     if (!exists(abs)) {
       return {
         content: [{ type: "text", text: `File not found: ${file}` }],
@@ -626,10 +784,18 @@ server.registerTool(
   },
 );
 
+
+
 try {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  
+  const projectRoot = findProjectRoot(process.cwd());
   console.error(`[mcp] node-modules-docs v0.3.0 ready. CWD=${process.cwd()}`);
+  console.error(`[mcp] Initializing documentation cache...`);
+  
+  const { total, cached } = initializeDocsCache(projectRoot);
+  console.error(`[mcp] Documentation cache initialized: ${cached}/${total} modules cached in ${DOCS_CACHE_DIR}`);
 } catch (e) {
   console.error("Error starting server:", (e as Error).stack || e);
   process.exit(1);
