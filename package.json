@@ -1,6 +1,6 @@
 {
   "name": "@kozer/mcp-dependency-explorer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for exploring and inspecting project dependencies - documentation and source code access",
   "type": "module",
   "author": "Antony Agrios <antonyagrios@gmail.com>",
